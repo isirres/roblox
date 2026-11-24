@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RBlock – R6 Avatar</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      background: linear-gradient(#79c8ff 0 64%, #83cf64 64% 100%);
+    }
+    .sun { position: absolute; top: 65px; right: 12%; width: 76px; height: 76px; border-radius: 50%; background: #ffe77a; box-shadow: 0 0 35px #ffe77a; }
+    .cloud { position: absolute; top: 100px; left: 15%; width: 120px; height: 30px; border-radius: 30px; background: #fff; opacity: .8; }
+    .cloud::before, .cloud::after { content: ""; position: absolute; bottom: 8px; border-radius: 50%; background: inherit; }
+    .cloud::before { left: 20px; width: 45px; height: 45px; }
+    .cloud::after { left: 55px; width: 34px; height: 34px; }
+    .ground { position: absolute; inset: 64% 0 0; background: repeating-linear-gradient(0deg, #70bd54 0 38px, #78c45b 39px 41px); border-top: 5px solid #599b43; }
+    #hint { position: fixed; z-index: 5; top: 15px; left: 50%; transform: translateX(-50%); width: max-content; max-width: 95vw; padding: 10px 15px; border-radius: 10px; background: #17314dcc; color: white; text-align: center; font-weight: 700; }
+    #avatar { position: absolute; z-index: 2; left: 50%; bottom: 12%; width: 100px; height: 190px; transform: translateX(-50%); transform-origin: bottom center; }
+    .part { position: absolute; border: 2px solid #0002; box-shadow: inset -6px -6px #0002; }
+    .head { top: 0; left: 27px; width: 46px; height: 46px; background: #f2c094; }
+    .hair { position: absolute; z-index: 2; top: -4px; left: 24px; width: 52px; height: 16px; background: #56351f; }
+    .face { position: absolute; z-index: 3; top: 18px; left: 38px; width: 5px; height: 6px; background: #222; box-shadow: 18px 0 #222; }
+    .smile { position: absolute; z-index: 3; top: 34px; left: 44px; width: 13px; height: 3px; background: #934a3b; }
+    .torso { top: 49px; left: 19px; width: 62px; height: 68px; background: #1687db; }
+    .arm { top: 51px; width: 18px; height: 67px; background: #f2c094; transform-origin: 50% 8px; }
+    .arm.left { left: 0; }
+    .arm.right { right: 0; }
+    .leg { top: 119px; width: 29px; height: 59px; background: #263d73; transform-origin: 50% 8px; }
+    .leg.left { left: 19px; }
+    .leg.right { right: 19px; }
+    .shoe { top: 169px; width: 33px; height: 16px; background: #292929; }
+    .shoe.left { left: 15px; }
+    .shoe.right { right: 15px; }
+    #avatar.walking .arm.left, #avatar.walking .leg.right { animation: swing .28s ease-in-out infinite alternate; }
+    #avatar.walking .arm.right, #avatar.walking .leg.left { animation: swing .28s ease-in-out infinite alternate-reverse; }
+    @keyframes swing { to { transform: rotate(22deg); } }
+    @media (max-width: 550px) { #hint { font-size: 13px; } }
+  </style>
+</head>
+<body>
+  <div class="sun"></div><div class="cloud"></div><div class="ground"></div>
+  <div id="hint">W A S D bewegen &nbsp;·&nbsp; Leertaste springen</div>
+  <div id="avatar" aria-label="Blockiger R6-Avatar">
+    <div class="hair"></div><div class="part head"></div><div class="face"></div><div class="smile"></div>
+    <div class="part torso"></div>
+    <div class="part arm left"></div><div class="part arm right"></div>
+    <div class="part leg left"></div><div class="part leg right"></div>
+    <div class="part shoe left"></div><div class="part shoe right"></div>
+  </div>
+  <script>
+    const avatar = document.querySelector('#avatar');
+    const keys = new Set();
+    let x = innerWidth / 2;
+    let depth = 0;
+    let jump = 0;
+    let jumpSpeed = 0;
+
+    addEventListener('keydown', event => {
+      const key = event.key.toLowerCase();
+      if (['w', 'a', 's', 'd', ' '].includes(key)) event.preventDefault();
+      keys.add(key);
+      if (key === ' ' && jump === 0) jumpSpeed = 13;
+    });
+    addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
+    addEventListener('blur', () => keys.clear());
+
+    function update() {
+      const speed = 4;
+      if (keys.has('a')) x -= speed;
+      if (keys.has('d')) x += speed;
+      if (keys.has('w')) depth += speed;
+      if (keys.has('s')) depth -= speed;
+      x = Math.max(50, Math.min(innerWidth - 50, x));
+      depth = Math.max(-innerHeight * .05, Math.min(innerHeight * .23, depth));
+      jump += jumpSpeed;
+      jumpSpeed -= .65;
+      if (jump < 0) { jump = 0; jumpSpeed = 0; }
+
+      const scale = 1 + depth / (innerHeight * 3);
+      avatar.style.left = `${x}px`;
+      avatar.style.bottom = `calc(12% + ${depth + jump}px)`;
+      avatar.style.transform = `translateX(-50%) scale(${scale})`;
+      avatar.classList.toggle('walking', ['w', 'a', 's', 'd'].some(key => keys.has(key)));
+      requestAnimationFrame(update);
+    }
+    update();
+    addEventListener('resize', () => { x = Math.min(x, innerWidth - 50); });
+  </script>
+</body>
+</html>
