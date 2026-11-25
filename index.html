@@ -3,35 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>RBlock 3D – R6 Avatar</title>
+  <title>RBlock 3D – Blockwelt</title>
   <style>
     * { box-sizing: border-box; }
     html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
-    body { font-family: system-ui, Arial, sans-serif; background: linear-gradient(#75bfff 0 61%, #78c75a 61% 100%); perspective: 900px; }
-    .world { position: fixed; inset: 0; overflow: hidden; transform-style: preserve-3d; }
-    .sky-glow { position: absolute; top: 7%; right: 12%; width: 90px; height: 90px; border-radius: 50%; background: #ffe97e; box-shadow: 0 0 45px #fff5a5; }
-    .cloud { position: absolute; top: 13%; left: 12%; width: 150px; height: 38px; border-radius: 40px; background: #fff; opacity: .85; }
-    .cloud::before, .cloud::after { content: ""; position: absolute; bottom: 10px; border-radius: 50%; background: inherit; }
-    .cloud::before { left: 25px; width: 55px; height: 55px; }
-    .cloud::after { right: 25px; width: 42px; height: 42px; }
-    .ground { position: absolute; left: -20%; bottom: -38%; width: 140%; height: 78%; background: linear-gradient(90deg, #0001 1px, transparent 1px), linear-gradient(#64ad4c 1px, transparent 1px), #70be54; background-size: 55px 55px, 55px 55px, auto; transform: rotateX(66deg); transform-origin: bottom center; box-shadow: inset 0 30px 50px #559a42; }
-
-    #avatar { position: absolute; z-index: 3; left: 50%; bottom: 13%; width: 100px; height: 190px; transform: translateX(-50%) rotateY(-12deg); transform-style: preserve-3d; transform-origin: bottom center; }
-    .part { position: absolute; border: 2px solid #0003; box-shadow: inset -8px -8px #0003, 5px 8px 8px #0002; transform-style: preserve-3d; }
-    .head { top: 0; left: 27px; width: 46px; height: 46px; background: #f2c094; }
-    .hair { position: absolute; z-index: 5; top: -4px; left: 24px; width: 52px; height: 17px; background: #56351f; box-shadow: 0 7px #56351f; }
-    .face { position: absolute; z-index: 6; top: 18px; left: 38px; width: 5px; height: 6px; background: #222; box-shadow: 18px 0 #222, 7px 16px 0 -1px #934a3b; }
-    .torso { top: 49px; left: 19px; width: 62px; height: 68px; background: #1687db; }
-    .arm { top: 51px; width: 18px; height: 67px; background: #f2c094; transform-origin: 50% 8px; }
-    .arm.left { left: 0; } .arm.right { right: 0; }
-    .leg { top: 119px; width: 29px; height: 59px; background: #263d73; transform-origin: 50% 8px; }
-    .leg.left { left: 19px; } .leg.right { right: 19px; }
-    .shoe { top: 169px; width: 33px; height: 16px; background: #292929; }
-    .shoe.left { left: 15px; } .shoe.right { right: 15px; }
-    #avatar.walking .arm.left, #avatar.walking .leg.right { animation: swing .28s ease-in-out infinite alternate; }
-    #avatar.walking .arm.right, #avatar.walking .leg.left { animation: swing .28s ease-in-out infinite alternate-reverse; }
-    @keyframes swing { to { transform: rotate(25deg); } }
-
+    body { font-family: system-ui, Arial, sans-serif; background: #87ceeb; }
+    canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
     #hint { position: fixed; z-index: 4; top: 14px; left: 50%; transform: translateX(-50%); width: max-content; max-width: 94vw; padding: 9px 14px; border-radius: 10px; background: #17314dcc; color: white; text-align: center; font-weight: 700; }
     #start-screen { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; padding: 18px; background: #10243dcc; }
     #start-screen.closed { display: none; }
@@ -41,93 +18,235 @@
     #device-name { font-weight: 800; font-size: 20px; }
     #device-instructions { line-height: 1.5; }
     #start-button { margin-top: 12px; padding: 12px 35px; border: 0; border-radius: 12px; background: #1687db; color: white; font-size: 20px; font-weight: 800; cursor: pointer; }
-
     .touch-controls { position: fixed; z-index: 5; left: 18px; bottom: 16px; display: none; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 56px); gap: 7px; }
     .touch-controls button { border: 0; border-radius: 14px; background: #ffffffdf; color: #17314d; font-size: 20px; font-weight: 800; box-shadow: 0 3px 8px #0003; touch-action: none; user-select: none; }
     [data-key="w"] { grid-column: 2; grid-row: 1; } [data-key="a"] { grid-column: 1; grid-row: 2; }
     [data-key="s"] { grid-column: 2; grid-row: 2; } [data-key="d"] { grid-column: 3; grid-row: 2; }
     [data-key=" "] { position: fixed; right: 20px; bottom: 22px; width: 76px; height: 76px; border-radius: 50%; background: #1687db; color: white; font-size: 14px; }
     body.phone #hint { display: none; } body.phone .touch-controls { display: grid; }
+    #load-error { display: none; position: fixed; inset: 0; z-index: 20; place-items: center; padding: 24px; color: #17243a; background: #fff; text-align: center; }
   </style>
 </head>
 <body>
-  <div class="world">
-    <div class="sky-glow"></div><div class="cloud"></div><div class="ground"></div>
-  </div>
   <div id="hint">W A S D bewegen · Leertaste springen</div>
-  <div id="avatar" aria-label="Blockiger 3D-R6-Avatar">
-    <div class="hair"></div><div class="part head"></div><div class="face"></div>
-    <div class="part torso"></div><div class="part arm left"></div><div class="part arm right"></div>
-    <div class="part leg left"></div><div class="part leg right"></div><div class="part shoe left"></div><div class="part shoe right"></div>
-  </div>
-
   <div class="touch-controls" aria-label="Touch-Steuerung">
-    <button type="button" data-key="w">▲</button><button type="button" data-key="a">◀</button>
-    <button type="button" data-key="s">▼</button><button type="button" data-key="d">▶</button>
-    <button type="button" data-key=" ">SPRUNG</button>
+    <button type="button" data-key="w" aria-label="Vorwärts">▲</button>
+    <button type="button" data-key="a" aria-label="Links">◀</button>
+    <button type="button" data-key="s" aria-label="Rückwärts">▼</button>
+    <button type="button" data-key="d" aria-label="Rechts">▶</button>
+    <button type="button" data-key=" " aria-label="Springen">SPRUNG</button>
   </div>
-
-  <section id="start-screen" role="dialog" aria-modal="true">
+  <section id="start-screen" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
     <div class="start-card">
-      <h1>Willkommen!</h1><div id="device-icon" class="device-icon">💻</div>
+      <h1 id="welcome-title">Willkommen in der Blockwelt!</h1>
+      <div id="device-icon" class="device-icon" aria-hidden="true">💻</div>
       <div id="device-name">Laptop erkannt</div>
-      <p id="device-instructions">Bewege mit <b>W A S D</b> und springe mit der <b>Leertaste</b>.</p>
+      <p id="device-instructions">Bewege dich mit <b>W A S D</b> und springe mit der <b>Leertaste</b>.</p>
       <button id="start-button" type="button">START</button>
     </div>
   </section>
+  <div id="load-error">Die 3D-Welt konnte nicht geladen werden. Bitte prüfe deine Internetverbindung und lade die Seite neu.</div>
 
-  <script>
-    const avatar = document.querySelector('#avatar');
-    const keys = new Set();
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js';
+
     const isPhone = matchMedia('(pointer: coarse)').matches || innerWidth < 700;
     if (isPhone) {
       document.body.classList.add('phone');
       document.querySelector('#device-icon').textContent = '📱';
       document.querySelector('#device-name').textContent = 'Telefon erkannt';
-      document.querySelector('#device-instructions').innerHTML = 'Steuere mit den <b>Touch-Tasten</b>. Tippe <b>SPRUNG</b> zum Springen.';
+      document.querySelector('#device-instructions').innerHTML = 'Steuere mit den <b>Touch-Tasten</b>. Tippe auf <b>SPRUNG</b>, um zu springen.';
     }
-    document.querySelector('#start-button').addEventListener('click', () => {
-      document.querySelector('#start-screen').classList.add('closed');
-    });
 
-    let x = innerWidth / 2, depth = 0, jump = 0, jumpSpeed = 0, facing = 1;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87ceeb);
+    scene.fog = new THREE.Fog(0x87ceeb, 75, 170);
+    const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.1, 250);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    document.body.prepend(renderer.domElement);
+
+    scene.add(new THREE.HemisphereLight(0xd9f2ff, 0x63814a, 2.1));
+    const sun = new THREE.DirectionalLight(0xfff1c2, 3.2);
+    sun.position.set(-25, 45, 28);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.camera.left = -55; sun.shadow.camera.right = 55;
+    sun.shadow.camera.top = 55; sun.shadow.camera.bottom = -55;
+    scene.add(sun);
+
+    const mat = color => new THREE.MeshStandardMaterial({ color, roughness: 0.9 });
+    const grassMat = mat(0x65b94c);
+    const ground = new THREE.Mesh(new THREE.BoxGeometry(180, 2, 180), grassMat);
+    ground.position.y = -1;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Große, farbige Flächen und Blöcke geben der Welt einen einfachen Roblox-Stil.
+    const tileColors = [0x72c857, 0x69bd50, 0x7dce5d];
+    for (let x = -80; x < 80; x += 16) {
+      for (let z = -80; z < 80; z += 16) {
+        const tile = new THREE.Mesh(new THREE.BoxGeometry(15.8, 0.12, 15.8), mat(tileColors[(Math.abs(x / 16 + z / 16) % tileColors.length)]));
+        tile.position.set(x + 7.5, 0.05, z + 7.5);
+        tile.receiveShadow = true;
+        scene.add(tile);
+      }
+    }
+
+    function block(w, h, d, color, x, y, z, cast = true) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(color));
+      mesh.position.set(x, y + h / 2, z);
+      mesh.castShadow = cast;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      return mesh;
+    }
+    function tree(x, z, size = 1) {
+      block(0.9 * size, 3.2 * size, 0.9 * size, 0x79502d, x, 0, z);
+      block(3.2 * size, 2.8 * size, 3.2 * size, 0x2d9a48, x, 2.4 * size, z);
+      block(2.2 * size, 2.1 * size, 2.2 * size, 0x46b957, x, 4.1 * size, z);
+    }
+    function house(x, z, color) {
+      block(8, 6, 7, color, x, 0, z);
+      block(9, 1, 8, 0x8c4c33, x, 6, z);
+      block(1.5, 3, 0.25, 0x563920, x, 0, z + 3.64);
+      block(1.5, 1.6, 0.3, 0x9de5ff, x - 2.3, 2.2, z + 3.62);
+      block(1.5, 1.6, 0.3, 0x9de5ff, x + 2.3, 2.2, z + 3.62);
+    }
+
+    // Roads, stepping blocks, houses, trees, and a small park.
+    block(15, 0.18, 110, 0xc6b58c, 0, 0.12, -3, false);
+    block(110, 0.18, 12, 0xd8c69b, -10, 0.14, 8, false);
+    house(-25, -27, 0xffb347); house(25, -30, 0xf27367);
+    house(-34, 24, 0x55aaff); house(35, 29, 0xc38cf2);
+    for (const [x, z, s] of [[-16,-18,1],[-38,-15,1.2],[15,-24,.9],[40,-18,1.1],[-45,3,.9],[43,8,1.2],[-20,39,1],[19,43,1.1],[0,-43,1.3]]) tree(x,z,s);
+    block(12, 1.2, 12, 0xe7d7a8, 0, 0.3, -18);
+    block(5, 3, 5, 0xf7cf4a, 0, 1.5, -18);
+    // Colorful stepping blocks near the starting area.
+    block(5, 1, 5, 0xff5d73, -12, 0.35, 13);
+    block(5, 2, 5, 0x47b9ff, -5, 0.35, 13);
+    block(5, 3, 5, 0xffd447, 2, 0.35, 13);
+    block(5, 1.5, 5, 0x9d70ed, 9, 0.35, 13);
+    const grid = new THREE.GridHelper(180, 45, 0x3e913d, 0x4e9f43);
+    grid.position.y = 0.13;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.24;
+    scene.add(grid);
+
+    // Blocky 3D avatar.
+    const player = new THREE.Group();
+    scene.add(player);
+    const body = new THREE.Group();
+    player.add(body);
+    function bodyPart(w, h, d, color, x, y, z = 0) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(color));
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      body.add(mesh);
+      return mesh;
+    }
+    bodyPart(1.1, 1.1, 0.9, 0xf2c094, 0, 2.75);
+    bodyPart(1.14, 0.28, 0.94, 0x56351f, 0, 3.32, -0.02);
+    bodyPart(1.35, 1.45, 0.72, 0x1687db, 0, 1.48);
+    // Face details on the front (negative Z).
+    bodyPart(0.12, 0.14, 0.06, 0x202020, -0.24, 2.83, -0.49);
+    bodyPart(0.12, 0.14, 0.06, 0x202020, 0.24, 2.83, -0.49);
+    bodyPart(0.26, 0.06, 0.06, 0x934a3b, 0, 2.55, -0.49);
+    function limb(w, h, d, color, x, y) {
+      const pivot = new THREE.Group();
+      pivot.position.set(x, y, 0);
+      body.add(pivot);
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(color));
+      mesh.position.y = -h / 2;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      pivot.add(mesh);
+      return pivot;
+    }
+    const armL = limb(0.42, 1.35, 0.48, 0xf2c094, -0.94, 2.12);
+    const armR = limb(0.42, 1.35, 0.48, 0xf2c094, 0.94, 2.12);
+    const legL = limb(0.55, 1.15, 0.62, 0x263d73, -0.38, 0.8);
+    const legR = limb(0.55, 1.15, 0.62, 0x263d73, 0.38, 0.8);
+    bodyPart(0.6, 0.28, 0.85, 0x292929, -0.38, 0.18, -0.08);
+    bodyPart(0.6, 0.28, 0.85, 0x292929, 0.38, 0.18, -0.08);
+    player.position.set(0, 0, 2);
+
+    const keys = new Set();
+    let verticalVelocity = 0;
+    let facing = Math.PI;
+    let walking = false;
+    const startButton = document.querySelector('#start-button');
+    startButton.addEventListener('click', () => document.querySelector('#start-screen').classList.add('closed'));
     addEventListener('keydown', event => {
       const key = event.key.toLowerCase();
-      if (['w','a','s','d',' '].includes(key)) event.preventDefault();
+      if (['w', 'a', 's', 'd', ' '].includes(key)) event.preventDefault();
       keys.add(key);
-      if (key === ' ' && jump === 0) jumpSpeed = 13;
+      if (key === ' ' && player.position.y <= 0.001) verticalVelocity = 8.5;
     });
     addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
     addEventListener('blur', () => keys.clear());
-
     document.querySelectorAll('.touch-controls button').forEach(button => {
       const key = button.dataset.key;
       button.addEventListener('pointerdown', event => {
         event.preventDefault(); button.setPointerCapture(event.pointerId); keys.add(key);
-        if (key === ' ' && jump === 0) jumpSpeed = 13;
+        if (key === ' ' && player.position.y <= 0.001) verticalVelocity = 8.5;
       });
       const release = event => { event.preventDefault(); keys.delete(key); };
-      button.addEventListener('pointerup', release); button.addEventListener('pointercancel', release);
+      button.addEventListener('pointerup', release);
+      button.addEventListener('pointercancel', release);
       button.addEventListener('lostpointercapture', () => keys.delete(key));
     });
 
-    function update() {
-      if (keys.has('a')) { x -= 4; facing = -1; }
-      if (keys.has('d')) { x += 4; facing = 1; }
-      if (keys.has('w')) depth += 4;
-      if (keys.has('s')) depth -= 4;
-      x = Math.max(50, Math.min(innerWidth - 50, x));
-      depth = Math.max(-innerHeight * .05, Math.min(innerHeight * .23, depth));
-      jump += jumpSpeed; jumpSpeed -= .65;
-      if (jump < 0) { jump = 0; jumpSpeed = 0; }
-      const scale = 1 + depth / (innerHeight * 3);
-      avatar.style.left = `${x}px`;
-      avatar.style.bottom = `calc(13% + ${depth + jump}px)`;
-      avatar.style.transform = `translateX(-50%) scale(${scale}) rotateY(${facing * 12}deg)`;
-      avatar.classList.toggle('walking', ['w','a','s','d'].some(key => keys.has(key)));
-      requestAnimationFrame(update);
+    const cameraOffset = new THREE.Vector3(0, 6.5, 10.5);
+    const lookTarget = new THREE.Vector3();
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.04);
+      let dx = 0, dz = 0;
+      if (keys.has('a')) dx -= 1;
+      if (keys.has('d')) dx += 1;
+      if (keys.has('w')) dz -= 1;
+      if (keys.has('s')) dz += 1;
+      walking = dx !== 0 || dz !== 0;
+      if (walking) {
+        const length = Math.hypot(dx, dz);
+        dx /= length; dz /= length;
+        player.position.x += dx * 9 * dt;
+        player.position.z += dz * 9 * dt;
+        facing = Math.atan2(dx, dz);
+      }
+      player.position.x = THREE.MathUtils.clamp(player.position.x, -82, 82);
+      player.position.z = THREE.MathUtils.clamp(player.position.z, -82, 82);
+      player.position.y += verticalVelocity * dt;
+      verticalVelocity -= 22 * dt;
+      if (player.position.y < 0) { player.position.y = 0; verticalVelocity = 0; }
+      player.rotation.y = facing;
+      const swing = walking ? Math.sin(performance.now() * 0.012) * 0.65 : 0;
+      armL.rotation.x = swing; legR.rotation.x = swing;
+      armR.rotation.x = -swing; legL.rotation.x = -swing;
+
+      const desiredCamera = player.position.clone().add(cameraOffset);
+      camera.position.lerp(desiredCamera, 1 - Math.exp(-5 * dt));
+      lookTarget.set(player.position.x, player.position.y + 1.5, player.position.z - 3.2);
+      camera.lookAt(lookTarget);
+      renderer.render(scene, camera);
     }
-    update();
+    animate();
+
+    addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
+    });
   </script>
 </body>
 </html>
