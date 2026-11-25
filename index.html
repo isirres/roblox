@@ -27,7 +27,7 @@
   </style>
 </head>
 <body>
-  <div id="hint">W A S D bewegen · Maus ziehen, um die Kamera zu drehen · Leertaste springen</div>
+  <div id="hint">W A S D bewegen · Maus ziehen zum Drehen · Mausrad zum Zoomen · Leertaste springen</div>
   <div class="touch-controls" aria-label="Touch-Steuerung">
     <button type="button" data-key="w" aria-label="Vorwärts">▲</button>
     <button type="button" data-key="a" aria-label="Links">◀</button>
@@ -40,7 +40,7 @@
       <h1 id="welcome-title">Willkommen in der Blockwelt!</h1>
       <div id="device-icon" class="device-icon" aria-hidden="true">💻</div>
       <div id="device-name">Laptop erkannt</div>
-      <p id="device-instructions">Bewege mit <b>W A S D</b>, ziehe mit der Maus zum Drehen und springe mit <b>Leertaste</b>.</p>
+      <p id="device-instructions">Bewege mit <b>W A S D</b>, ziehe die Maus zum Drehen, nutze das Mausrad zum Zoomen und springe mit <b>Leertaste</b>.</p>
       <button id="start-button" type="button">START</button>
     </div>
   </section>
@@ -53,44 +53,48 @@
       document.body.classList.add('phone');
       document.querySelector('#device-icon').textContent = '📱';
       document.querySelector('#device-name').textContent = 'Telefon erkannt';
-      document.querySelector('#device-instructions').innerHTML = 'Nutze die <b>Touch-Tasten</b> zum Bewegen. Ziehe auf der rechten Bildschirmseite, um die Kamera zu drehen.';
+      document.querySelector('#device-instructions').innerHTML = 'Nutze die <b>Touch-Tasten</b> zum Bewegen. Ziehe über die Welt, um die Kamera zu drehen.';
     }
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87ceeb);
-    scene.fog = new THREE.Fog(0x87ceeb, 85, 190);
-    const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 260);
+    scene.fog = new THREE.Fog(0x87ceeb, 125, 290);
+    const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.1, 420);
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
     renderer.setSize(innerWidth, innerHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 1.22;
     document.body.prepend(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xdff5ff, 0x567b43, 2.2));
-    const sun = new THREE.DirectionalLight(0xfff0cc, 3.4);
-    sun.position.set(-25, 50, 30);
+    scene.add(new THREE.HemisphereLight(0xdff5ff, 0x567b43, 2.25));
+    const sun = new THREE.DirectionalLight(0xfff0cc, 3.6);
+    sun.position.set(-35, 65, 38);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1536, 1536);
-    sun.shadow.camera.left = -55; sun.shadow.camera.right = 55;
-    sun.shadow.camera.top = 55; sun.shadow.camera.bottom = -55;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -90; sun.shadow.camera.right = 90;
+    sun.shadow.camera.top = 90; sun.shadow.camera.bottom = -90;
     sun.shadow.bias = -0.00025;
+    sun.shadow.normalBias = 0.035;
     scene.add(sun);
+    const sunBall = new THREE.Mesh(new THREE.SphereGeometry(7, 20, 16), new THREE.MeshBasicMaterial({ color: 0xffed9b }));
+    sunBall.position.set(-90, 105, -155);
+    scene.add(sunBall);
 
     const mat = (color, roughness = 0.86) => new THREE.MeshStandardMaterial({ color, roughness });
-    const ground = new THREE.Mesh(new THREE.BoxGeometry(180, 2, 180), mat(0x65b94c));
-    ground.position.y = -1;
+    const ground = new THREE.Mesh(new THREE.BoxGeometry(280, 3, 280), mat(0x65b94c));
+    ground.position.y = -1.5;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Subtle ground tiles make the block-built world easier to read.
-    const tileColors = [0x72c857, 0x69bd50, 0x7dce5d];
-    for (let x = -80; x < 80; x += 16) {
-      for (let z = -80; z < 80; z += 16) {
-        const tile = new THREE.Mesh(new THREE.BoxGeometry(15.8, 0.12, 15.8), mat(tileColors[Math.abs(x / 16 + z / 16) % tileColors.length]));
+    // Broad, varied grass tiles give the map scale without making it look like a flat plane.
+    const tileColors = [0x72c857, 0x69bd50, 0x7dce5d, 0x6fbe50];
+    for (let x = -128; x < 128; x += 16) {
+      for (let z = -128; z < 128; z += 16) {
+        const tile = new THREE.Mesh(new THREE.BoxGeometry(15.8, 0.12, 15.8), mat(tileColors[Math.abs(x / 16 * 3 + z / 16) % tileColors.length]));
         tile.position.set(x + 7.5, 0.05, z + 7.5);
         tile.receiveShadow = true;
         scene.add(tile);
@@ -117,7 +121,8 @@
       group.scale.setScalar(scale);
       scene.add(group);
     }
-    cloud(-27, 24, -45, 1.1); cloud(28, 29, -60, 1.3); cloud(49, 21, 22, .85);
+    cloud(-27, 35, -75, 1.5); cloud(28, 42, -105, 1.8); cloud(75, 30, 25, 1.25);
+    cloud(-88, 39, 68, 1.4); cloud(105, 47, -38, 1.6); cloud(-12, 50, 118, 1.8);
 
     function tree(x, z, size = 1) {
       block(0.9 * size, 3.2 * size, 0.9 * size, 0x79502d, x, 0, z);
@@ -127,7 +132,6 @@
     }
     function house(x, z, color) {
       block(8, 6, 7, color, x, 0, z);
-      // Layered roof blocks add shape while keeping the playful block-world look.
       block(9.4, 0.8, 8.2, 0x8c4c33, x, 6, z);
       block(7.2, 0.65, 6.4, 0xa65a38, x, 6.75, z);
       block(1.5, 3, 0.25, 0x563920, x, 0, z + 3.64);
@@ -135,24 +139,81 @@
       block(1.5, 1.6, 0.28, 0x9de5ff, x + 2.3, 2.2, z + 3.62, true, 0.25);
       block(0.12, 1.6, 0.08, 0xffffff, x - 2.3, 2.2, z + 3.78, false);
       block(0.12, 1.6, 0.08, 0xffffff, x + 2.3, 2.2, z + 3.78, false);
+      block(0.18, 1.6, 0.08, 0xffffff, x - 3.02, 2.2, z + 3.8, false);
+      block(0.18, 1.6, 0.08, 0xffffff, x + 1.58, 2.2, z + 3.8, false);
+      block(2.2, 0.28, 0.65, 0x9b6b42, x, 3.25, z + 4.2);
+    }
+    function treeLine(x, startZ, count, gap = 18) {
+      for (let i = 0; i < count; i++) tree(x, startZ + i * gap, 0.8 + (i % 3) * 0.12);
     }
 
-    // Roads, sidewalk edges, a park, and colorful stepping blocks.
-    block(15, 0.18, 110, 0xb9b5ad, 0, 0.12, -3, false);
-    block(110, 0.18, 12, 0xcac5bb, -10, 0.14, 8, false);
-    block(1, 0.2, 110, 0xf3dc88, -7, 0.2, -3, false);
-    block(1, 0.2, 110, 0xf3dc88, 7, 0.2, -3, false);
+    // Distant blocky hills frame the playable area.
+    for (let i = 0; i < 18; i++) {
+      const x = -140 + i * 16;
+      const height = 14 + (i * 13 % 25);
+      block(18, height, 20, i % 2 ? 0x70b957 : 0x83c65e, x, 0, -145, false);
+      block(18, height * 0.8, 20, i % 2 ? 0x70b957 : 0x83c65e, x, 0, 145, false);
+    }
+    for (let i = 0; i < 18; i++) {
+      const z = -128 + i * 15;
+      const height = 16 + (i * 11 % 22);
+      block(20, height, 18, 0x79bf59, -145, 0, z, false);
+      block(20, height * 0.9, 18, 0x6fb452, 145, 0, z, false);
+    }
+
+    // Main avenues with sidewalks, lane markings, and street lamps.
+    block(15, 0.18, 190, 0x777e84, 0, 0.12, -3, false);
+    block(190, 0.18, 12, 0xbeb9ad, -10, 0.14, 8, false);
+    block(1, 0.2, 190, 0xf3dc88, -7, 0.2, -3, false);
+    block(1, 0.2, 190, 0xf3dc88, 7, 0.2, -3, false);
+    for (let z = -85; z < 85; z += 16) block(0.28, 0.06, 7, 0xf8f2d5, 0, 0.27, z, false);
+    for (const z of [-72, -36, 0, 36, 72]) {
+      for (const side of [-1, 1]) {
+        const lx = side * 10;
+        block(0.45, 5.6, 0.45, 0x535b63, lx, 0, z);
+        block(1.8, 0.35, 0.8, 0xf6e8aa, lx, 5.4, z - 0.6);
+        const lampGlow = new THREE.PointLight(0xffe6a3, 0.35, 9);
+        lampGlow.position.set(lx, 5.4, z - 0.6);
+        scene.add(lampGlow);
+      }
+    }
+
     house(-25, -27, 0xffb347); house(25, -30, 0xf27367);
     house(-34, 24, 0x55aaff); house(35, 29, 0xc38cf2);
-    for (const [x, z, s] of [[-16,-18,1],[-38,-15,1.2],[15,-24,.9],[40,-18,1.1],[-45,3,.9],[43,8,1.2],[-20,39,1],[19,43,1.1],[0,-43,1.3]]) tree(x,z,s);
-    block(12, 1.2, 12, 0xe7d7a8, 0, 0.3, -18);
-    block(5, 3, 5, 0xf7cf4a, 0, 1.5, -18);
+    for (const [x, z, s] of [[-16,-18,1],[-38,-15,1.2],[15,-24,.9],[40,-18,1.1],[-45,3,.9],[43,8,1.2],[-20,39,1],[19,43,1.1],[0,-43,1.3],[-56,-70,1.1],[58,-62,1.2],[-75,70,1.3],[72,75,1.1]]) tree(x,z,s);
+    treeLine(-85, -92, 12, 17); treeLine(86, -92, 12, 17);
+
+    // Park, fountain, benches and a little playground.
+    block(25, 0.2, 25, 0xd8c995, 0, 0.16, -24, false);
+    block(9, 0.65, 9, 0x56bce8, 0, 0.4, -24);
+    block(5, 1.6, 5, 0x79d4f3, 0, 0.8, -24);
+    block(1, 0.3, 1, 0xffffff, 0, 2.4, -24);
+    for (const x of [-9, 9]) {
+      block(3.5, 0.35, 0.9, 0x9b6337, x, 0.65, -17);
+      block(0.25, 0.8, 0.25, 0x514b47, x - 1.25, 0, -17);
+      block(0.25, 0.8, 0.25, 0x514b47, x + 1.25, 0, -17);
+    }
     block(5, 1, 5, 0xff5d73, -12, 0.35, 13);
     block(5, 2, 5, 0x47b9ff, -5, 0.35, 13);
     block(5, 3, 5, 0xffd447, 2, 0.35, 13);
     block(5, 1.5, 5, 0x9d70ed, 9, 0.35, 13);
 
-    // Blocky avatar; the face is on its forward side, away from the trailing camera.
+    // Small flowers and stones scattered with a seeded pattern for a lived-in world.
+    let seed = 41;
+    const random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    for (let i = 0; i < 145; i++) {
+      const x = (random() - 0.5) * 250;
+      const z = (random() - 0.5) * 250;
+      if ((Math.abs(x) < 11 && Math.abs(z) < 90) || (Math.abs(z - 8) < 8 && Math.abs(x) < 60)) continue;
+      if (i % 3 === 0) {
+        block(0.28, 0.22, 0.28, [0xffe66d, 0xff8fc7, 0xffffff][i % 3], x, 0.1, z, false);
+        block(0.1, 0.32, 0.1, 0x398f42, x, 0, z, false);
+      } else {
+        block(0.5 + random() * 0.6, 0.35, 0.5, i % 2 ? 0x858b7b : 0x9da18f, x, 0, z, false);
+      }
+    }
+
+    // Blocky avatar, with its face pointing forward and camera trailing behind.
     const player = new THREE.Group();
     const body = new THREE.Group();
     player.add(body);
@@ -194,9 +255,12 @@
     let verticalVelocity = 0;
     let cameraYaw = 0;
     let cameraPitch = 0.43;
+    let cameraDistance = 11;
     let dragging = false;
     let lastPointerX = 0;
     let lastPointerY = 0;
+    const cameraTarget = new THREE.Vector3();
+    const desiredCameraPosition = new THREE.Vector3();
 
     document.querySelector('#start-button').addEventListener('click', () => document.querySelector('#start-screen').classList.add('closed'));
     addEventListener('keydown', event => {
@@ -221,12 +285,16 @@
       const dx = event.clientX - lastPointerX;
       const dy = event.clientY - lastPointerY;
       cameraYaw -= dx * 0.006;
-      cameraPitch = THREE.MathUtils.clamp(cameraPitch + dy * 0.004, 0.15, 1.05);
+      cameraPitch = THREE.MathUtils.clamp(cameraPitch + dy * 0.004, 0.12, 1.12);
       lastPointerX = event.clientX;
       lastPointerY = event.clientY;
     });
     renderer.domElement.addEventListener('pointerup', () => dragging = false);
     renderer.domElement.addEventListener('pointercancel', () => dragging = false);
+    renderer.domElement.addEventListener('wheel', event => {
+      event.preventDefault();
+      cameraDistance = THREE.MathUtils.clamp(cameraDistance + event.deltaY * 0.012, 6, 24);
+    }, { passive: false });
 
     document.querySelectorAll('.touch-controls button').forEach(button => {
       const key = button.dataset.key;
@@ -241,11 +309,9 @@
     });
 
     const clock = new THREE.Clock();
-    const cameraTarget = new THREE.Vector3();
     function animate() {
       requestAnimationFrame(animate);
       const dt = Math.min(clock.getDelta(), 0.04);
-
       const forward = new THREE.Vector3(-Math.sin(cameraYaw), 0, -Math.cos(cameraYaw));
       const right = new THREE.Vector3(Math.cos(cameraYaw), 0, -Math.sin(cameraYaw));
       const move = new THREE.Vector3();
@@ -257,28 +323,24 @@
       if (walking) {
         move.normalize();
         player.position.addScaledVector(move, 9 * dt);
-        // The avatar's face points along its travel direction; the camera stays behind it.
         player.rotation.y = Math.atan2(-move.x, -move.z);
       }
-      player.position.x = THREE.MathUtils.clamp(player.position.x, -82, 82);
-      player.position.z = THREE.MathUtils.clamp(player.position.z, -82, 82);
+      player.position.x = THREE.MathUtils.clamp(player.position.x, -128, 128);
+      player.position.z = THREE.MathUtils.clamp(player.position.z, -128, 128);
       player.position.y += verticalVelocity * dt;
       verticalVelocity -= 22 * dt;
       if (player.position.y < 0) { player.position.y = 0; verticalVelocity = 0; }
-
       const swing = walking ? Math.sin(performance.now() * 0.012) * 0.65 : 0;
       armL.rotation.x = swing; legR.rotation.x = swing;
       armR.rotation.x = -swing; legL.rotation.x = -swing;
 
-      // Follow behind the avatar's forward direction so the player sees its back.
-      const distance = 10.5;
-      const horizontal = distance * Math.cos(cameraPitch);
-      const cameraOffset = new THREE.Vector3(
-        Math.sin(cameraYaw) * horizontal,
-        6.5 + cameraPitch * 2,
-        Math.cos(cameraYaw) * horizontal
+      const horizontal = cameraDistance * Math.cos(cameraPitch);
+      desiredCameraPosition.set(
+        player.position.x + Math.sin(cameraYaw) * horizontal,
+        player.position.y + 6.5 + cameraPitch * 2 + cameraDistance * 0.1,
+        player.position.z + Math.cos(cameraYaw) * horizontal
       );
-      camera.position.copy(player.position).add(cameraOffset);
+      camera.position.lerp(desiredCameraPosition, 1 - Math.exp(-7 * dt));
       cameraTarget.set(player.position.x, player.position.y + 1.7, player.position.z);
       camera.lookAt(cameraTarget);
       renderer.render(scene, camera);
@@ -289,7 +351,7 @@
       camera.aspect = innerWidth / innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(innerWidth, innerHeight);
-      renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
     });
   </script>
 </body>
