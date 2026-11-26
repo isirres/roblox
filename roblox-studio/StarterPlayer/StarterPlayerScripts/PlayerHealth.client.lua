@@ -1,16 +1,14 @@
--- Client-side player health display for Roblox Studio.
+-- Player health display, top right.
 -- Place this LocalScript in StarterPlayer > StarterPlayerScripts.
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
-local playerGui = player:WaitForChild("PlayerGui")
-
 local gui = Instance.new("ScreenGui")
 gui.Name = "PlayerHealthHUD"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
-gui.Parent = playerGui
+gui.Parent = player:WaitForChild("PlayerGui")
 
 local panel = Instance.new("Frame")
 panel.Name = "HealthPanel"
@@ -29,10 +27,10 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -20, 0, 20)
 title.Position = UDim2.fromOffset(10, 4)
 title.BackgroundTransparency = 1
- title.Text = "LEBEN"
+title.Text = "LEBEN"
 title.TextColor3 = Color3.new(1, 1, 1)
 title.TextSize = 14
- title.Font = Enum.Font.GothamBold
+title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = panel
 
@@ -87,5 +85,4 @@ end
 if player.Character then
 	connectCharacter(player.Character)
 end
-
 player.CharacterAdded:Connect(connectCharacter)

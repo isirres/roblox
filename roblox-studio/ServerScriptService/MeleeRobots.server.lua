@@ -1,6 +1,6 @@
 -- 10 melee robots for Roblox Studio.
 -- Place this Script in ServerScriptService.
--- Each player and robot has 100 HP. Roblox's humanoid system controls health and death.
+-- Each player and robot has 100 HP.
 
 local Players = game:GetService("Players")
 
@@ -209,15 +209,13 @@ for i = 1, NPC_COUNT do
 	end)
 end
 
-Players.PlayerAdded:Connect(function(player)
+local function setupPlayer(player)
 	player.CharacterAdded:Connect(function(character)
 		local humanoid = character:WaitForChild("Humanoid")
 		humanoid.MaxHealth = 100
 		humanoid.Health = 100
 	end)
-end)
 
-for _, player in ipairs(Players:GetPlayers()) do
 	if player.Character then
 		local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
 		if humanoid then
@@ -227,4 +225,9 @@ for _, player in ipairs(Players:GetPlayers()) do
 	end
 end
 
-print("Created 10 melee robots with 100 HP. Player UI must be enabled separately.")
+Players.PlayerAdded:Connect(setupPlayer)
+for _, player in ipairs(Players:GetPlayers()) do
+	setupPlayer(player)
+end
+
+print("Created 10 melee robots with 100 HP.")
